@@ -1,0 +1,35 @@
+name: Read-only live canary
+on:
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: Target environment (never submits documents)
+        type: choice
+        options: [staging, production]
+        default: staging
+        required: true
+permissions:
+  contents: read
+jobs:
+  canary:
+    runs-on: ubuntu-latest
+    environment: ${{ inputs.environment }}
+    timeout-minutes: 10
+    env:
+      PAPERLYFT_ENV: ${{ inputs.environment }}
+      PAPERLYFT_ALLOW_MUTATIONS: '0'
+      PAPERLYFT_ALLOW_PAID_PROCESSING: '0'
+      PAPERLYFT_ALLOW_PROD_CANARY: ${{ inputs.environment == 'production' && '1' || '0' }}
+      PAPERLYFT_PROD_ACK: production-canary
+      PAPERLYFT_PROD_TEST_SUBJECT: ${{ secrets.PAPERLYFT_PROD_TEST_SUBJECT }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 10.32.0
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile --ignore-scripts
+      - run: pnpm e2e --suite smoke --canary

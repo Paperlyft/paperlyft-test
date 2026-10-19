@@ -1,0 +1,89 @@
+# PaperLyft real-user tests
+
+A separate test harness for a running PaperLyft application. Use it to exercise actual uploads, processing, approval, publishing, bulk imports, account boundaries, and the website integration script. No application API responses are mocked in live suites.
+
+**Paid Gemini/provider processing is disabled by default. Do not enable it until explicitly authorized.** Offline checks and the public smoke suite never submit documents or call Gemini.
+
+## Start here
+
+Requires Node 22.13+ and pnpm 10.32.0. Browser tests use installed Chrome (or `PAPERLYFT_BROWSER_CHANNEL=msedge`). No Docker stack, cloud resources, or browser downloads are created by this repo.
+
+```powershell
+pnpm install --frozen-lockfile --ignore-scripts
+Copy-Item .env.example .env.local
+pnpm check
+pnpm fixtures
+pnpm doctor --suite smoke
+pnpm e2e --suite smoke
+```
+
+Run the PaperLyft application and worker using that application's existing development instructions first. The default target is `http://localhost:3000`; this repo does not start, reconfigure, or stop your application. Harness tests run with one browser worker and no automatic retries.
+
+## Real document corpus
+
+Use the supplied `C:\Users\kirta\Downloads\Testing Documents` folder through the corpus command documented in [docs/CORPUS.md](docs/CORPUS.md). It indexes PDFs locally and selects a reproducible random sample, with repeats allowed. Original documents are never modified or committed. Generated manifests and downloaded/browser evidence are ignored by Git.
+
+The fixture generator also provides small synthetic PDFs, a scan-like raster PDF, corrupt inputs, and 299/300/301-page boundary files. Arabic/CJK/Indic OCR quality requires appropriate real corpus documents; a synthetic English fixture is not evidence of those capabilities.
+
+## Dedicated accounts
+
+Capture test sessions manually so normal sign-in and MFA remain in place:
+
+```powershell
+pnpm auth --role adminA
+pnpm auth --role memberA
+pnpm auth --role adminB
+pnpm auth --role individual
+```
+
+`adminA` and `memberA` belong to one test organization. `adminB` belongs to a second organization; `individual` is a personal workspace. Optional `platform` is a dedicated platform operator. The script verifies the selected role, records the subject and tenant from the real session, and saves ignored files under `.auth/<environment>/`. It does not provision users, modify permission sets, or store passwords. Session cookies are credentials: never commit or share them. Refresh captures when they expire.
+
+The complete `roles` and `all` suites also require `pnpm auth --role platform`; narrower suites do not. Cross-tenant denial additionally needs `PAPERLYFT_ISOLATION_DOCUMENT_ID` set to a test document owned by `adminA`.
+
+## Suites
+
+| Command                        | Exercises                                                                                |
+| ------------------------------ | ---------------------------------------------------------------------------------------- |
+| `pnpm check`                   | Harness self-tests and typecheck; no product processing                                  |
+| `pnpm e2e --suite smoke`       | Anonymous real homepage and protected API rejection                                      |
+| `pnpm e2e --suite experience`  | Signed-in desktop/phone accessibility, keyboard and import-dialog defaults               |
+| `pnpm e2e --suite journeys`    | Actual upload, processing, approval, and the four approval/publication combinations      |
+| `pnpm e2e --suite corpus`      | Seeded random real PDFs from the supplied corpus, with repeat selections allowed         |
+| `pnpm e2e --suite imports`     | Real public URL import preparation, idempotency, reviewed admission and processing       |
+| `pnpm e2e --suite roles`       | Dedicated session roles and cross-tenant document denial                                 |
+| `pnpm e2e --suite integration` | Script copy, role visibility, private-reader denial and customer-host reader integration |
+| `pnpm e2e --suite all`         | All suites; requires all configured accounts and external prerequisites                  |
+| `pnpm e2e:list --suite all`    | List browser tests without executing them                                                |
+| `pnpm coverage`                | Implemented scenarios and explicit remaining gaps                                        |
+
+Run `pnpm doctor --suite <name>` before a live suite. A missing prerequisite is reported as blocked. Missing roles/corpus/public documents can cause explicit skips; **any skipped case makes the run incomplete, not a pass**. Expected product failures also fail the suite rather than being converted into successful processing.
+
+## Processing permission and budgets
+
+Only after explicit authorization, set `PAPERLYFT_ALLOW_MUTATIONS=1` and `PAPERLYFT_ALLOW_PAID_PROCESSING=1` in the ignored `.env.local`. Set `PAPERLYFT_MAX_SOURCE_PAGES` and `PAPERLYFT_MAX_COST_CENTS` to the approved run limits. Admissions reserve the verified page count and quoted charge against the aggregate run budget before starting work; uncertain submissions are not refunded. Keep dedicated accounts quiet while tests change their approval/publication settings. Review any interrupted run's remaining documents and settings before another run.
+
+This initial harness does not transact payments, activate paid service, clear real accounts, bypass MFA, or run stress tests. Billing failures, long-running monitoring cycles, uncommon language/layout fixtures, provider outages and other gaps are explicitly listed in [docs/COVERAGE.md](docs/COVERAGE.md). A scenario in that inventory is not a claim it has run successfully.
+
+## Website fixture lab and public imports
+
+```powershell
+pnpm lab
+```
+
+The lab runs on `http://127.0.0.1:4179`; stop it with Ctrl+C. Routes and capabilities are in [src/lab/README.md](src/lab/README.md). This is a synthetic source website, not a simulated PaperLyft application.
+
+PaperLyft correctly rejects private/loopback source URLs. For actual URL imports, host this lab at a customer-controlled public HTTPS origin and set `PAPERLYFT_PUBLIC_FIXTURE_BASE_URL`. Hosting/tunnel infrastructure is not provisioned automatically. Do not disable SSRF protection. Website-script integration also needs a published document associated with that fixture source; otherwise it reports a missing prerequisite.
+
+## Local → staging → production
+
+1. Use local for fixtures, selectors, document journeys, and recovery experiments.
+2. Set `PAPERLYFT_ENV=staging`, remove the local base URL override, capture separate staging test sessions, and repeat approved suites. Keep processing off until authorized.
+3. Set `PAPERLYFT_ENV=production`, remove the staging base URL override, and run only `pnpm e2e --suite smoke --canary`. Production additionally requires `PAPERLYFT_ALLOW_PROD_CANARY=1`, `PAPERLYFT_PROD_ACK=production-canary`, and the dedicated `PAPERLYFT_PROD_TEST_SUBJECT`. Production processing/mutation journeys are deliberately unsupported in this first version.
+
+The normal GitHub workflow runs offline checks and test discovery. The separate manual canary workflow makes read-only requests; production requires its environment secret. Neither workflow enables paid processing. Add GitHub environment reviewers in repository settings before using production.
+
+## Results and limitations
+
+Each browser run writes ignored `artifacts/<run-id>/playwright.json`, a compact `summary.json`, failed-test screenshots, and a processing-budget ledger if needed. `pnpm report artifacts/<run-id>/playwright.json` prints a summary without document contents or cookies. Traces and videos are off by default; screenshots may contain test-document content. Keep artifacts private and remove them when review is complete. No raw browser artifacts are uploaded automatically in CI.
+
+[docs/PLAN.md](docs/PLAN.md) contains the implementation plan. [docs/COVERAGE.md](docs/COVERAGE.md) separates executable checks from planned/manual/external-fixture cases. No finite sample establishes support for every possible PDF, language, CMS, or customer workflow.

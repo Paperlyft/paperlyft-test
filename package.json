@@ -1,0 +1,34 @@
+{
+  "name": "paperlyft-test",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "packageManager": "pnpm@10.32.0",
+  "engines": {
+    "node": ">=22.13"
+  },
+  "scripts": {
+    "test": "node --env-file-if-exists=.env.local --import tsx scripts/test-unit.ts",
+    "typecheck": "tsc --noEmit",
+    "check": "node --import tsx scripts/check.ts",
+    "fixtures": "node --env-file-if-exists=.env.local --import tsx scripts/build-fixtures.ts",
+    "corpus": "node --env-file-if-exists=.env.local --import tsx scripts/corpus.ts",
+    "lab": "node --env-file-if-exists=.env.local --import tsx scripts/lab.ts",
+    "doctor": "node --env-file-if-exists=.env.local --import tsx scripts/doctor.ts",
+    "auth": "node --env-file-if-exists=.env.local --import tsx scripts/auth.ts",
+    "e2e": "node --env-file-if-exists=.env.local --import tsx scripts/run-e2e.ts",
+    "e2e:list": "node --env-file-if-exists=.env.local --import tsx scripts/run-e2e.ts --list",
+    "coverage": "node --import tsx scripts/coverage.ts",
+    "report": "node --import tsx scripts/report.ts",
+    "format:check": "prettier --check ."
+  },
+  "devDependencies": {
+    "@axe-core/playwright": "4.14.0",
+    "@playwright/test": "1.63.0",
+    "@types/node": "^22.0.0",
+    "pdf-lib": "1.17.1",
+    "prettier": "3.8.4",
+    "tsx": "^4.0.0",
+    "typescript": "^5.0.0"
+  }
+}

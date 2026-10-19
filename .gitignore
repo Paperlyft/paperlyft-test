@@ -1,0 +1,16 @@
+node_modules/
+.auth/
+.env
+.env.*
+!.env.example
+artifacts/
+test-results/
+playwright-report/
+fixtures/generated/
+fixtures/private/
+*.log
+*.tsbuildinfo
+.DS_Store
+Thumbs.db
+core
+core.*
