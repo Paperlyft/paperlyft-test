@@ -5,6 +5,7 @@ Build a standalone acceptance-test repository for https://github.com/Paperlyft/p
 ## Execution stages
 
 1. Offline: validate the harness itself, generate deterministic small PDF fixtures, and test a controllable website lab. This proves fixture and harness behavior, not PaperLyft processing.
+   The user subsequently authorized bypassing paid processing for local checks. `test:product-local` imports the real application modules, injects a scripted AI provider, and runs real native PDF preflight, rasterization, rendering and final validation. A separate lifecycle integration supplies synthetic terminal artifacts to test bulk import, approval and publication policy. Neither is authenticated browser or cloud acceptance evidence. Provider construction and external HTTP are blocked in this test project.
 2. Local: run real browser journeys against the already configured local PaperLyft stack, using dedicated accounts and real worker/provider processing. Capture authentication interactively; do not bypass MFA or create mock sessions.
 3. Staging: repeat acceptance journeys against dedicated staging accounts, with explicit mutation and processing budgets. Public URL imports need a publicly reachable HTTPS fixture lab because the importer deliberately rejects localhost/private network URLs.
 4. Production: run a separate, small canary with dedicated accounts and explicit authorization flags and budgets. Exclude stress, destructive administration, real payments, security attacks, and bulk county crawls.

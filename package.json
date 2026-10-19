@@ -9,8 +9,11 @@
   },
   "scripts": {
     "test": "node --env-file-if-exists=.env.local --import tsx scripts/test-unit.ts",
+    "test:product-offline": "node --import tsx scripts/test-product-offline.ts",
+    "test:product-local": "node --import tsx scripts/test-product-local.ts",
     "test:lab": "node --env-file-if-exists=.env.local node_modules/@playwright/test/cli.js test --config playwright.lab.config.ts",
     "typecheck": "tsc --noEmit",
+    "typecheck:product": "tsc --noEmit -p tsconfig.product.json",
     "check": "node --import tsx scripts/check.ts",
     "fixtures": "node --env-file-if-exists=.env.local --import tsx scripts/build-fixtures.ts",
     "corpus": "node --env-file-if-exists=.env.local --import tsx scripts/corpus.ts",

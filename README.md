@@ -42,21 +42,42 @@ The complete `roles` and `all` suites also require `pnpm auth --role platform`; 
 
 ## Suites
 
-| Command                        | Exercises                                                                                 |
-| ------------------------------ | ----------------------------------------------------------------------------------------- |
-| `pnpm check`                   | Harness self-tests and typecheck; no product processing                                   |
-| `pnpm test:lab`                | Local synthetic source-site browser checks; no PaperLyft target or account                |
-| `pnpm e2e --suite smoke`       | Anonymous real homepage and protected API rejection                                       |
-| `pnpm e2e --suite experience`  | Signed-in desktop/phone accessibility, keyboard and import-dialog defaults                |
-| `pnpm e2e --suite journeys`    | Actual upload, processing, approval, and the four approval/publication combinations       |
-| `pnpm e2e --suite corpus`      | Seeded random real PDFs from the supplied corpus, with repeat selections allowed          |
-| `pnpm e2e --suite imports`     | Real public URL import preparation, idempotency, reviewed admission and processing        |
-| `pnpm e2e --suite discovery`   | Real website-import preparation against public synthetic provider profiles; no conversion |
-| `pnpm e2e --suite roles`       | Dedicated session roles and cross-tenant document denial                                  |
-| `pnpm e2e --suite integration` | Script copy, role visibility, private-reader denial and customer-host reader integration  |
-| `pnpm e2e --suite all`         | All suites; requires all configured accounts and external prerequisites                   |
-| `pnpm e2e:list --suite all`    | List browser tests without executing them                                                 |
-| `pnpm coverage`                | Implemented scenarios and explicit remaining gaps                                         |
+| Command                        | Exercises                                                                                  |
+| ------------------------------ | ------------------------------------------------------------------------------------------ |
+| `pnpm check`                   | Harness self-tests and typecheck; no product processing                                    |
+| `pnpm test:lab`                | Local synthetic source-site browser checks; no PaperLyft target or account                 |
+| `pnpm test:product-offline`    | Selected real application component suites with their existing test doubles                |
+| `pnpm test:product-local`      | Native PDF pipeline with scripted AI, bulk approval lifecycle, and local corpus inspection |
+| `pnpm typecheck:product`       | Product integration types against the default sibling application checkout                 |
+| `pnpm e2e --suite smoke`       | Anonymous real homepage and protected API rejection                                        |
+| `pnpm e2e --suite experience`  | Signed-in desktop/phone accessibility, keyboard and import-dialog defaults                 |
+| `pnpm e2e --suite journeys`    | Actual upload, processing, approval, and the four approval/publication combinations        |
+| `pnpm e2e --suite corpus`      | Seeded random real PDFs from the supplied corpus, with repeat selections allowed           |
+| `pnpm e2e --suite imports`     | Real public URL import preparation, idempotency, reviewed admission and processing         |
+| `pnpm e2e --suite discovery`   | Real website-import preparation against public synthetic provider profiles; no conversion  |
+| `pnpm e2e --suite roles`       | Dedicated session roles and cross-tenant document denial                                   |
+| `pnpm e2e --suite integration` | Script copy, role visibility, private-reader denial and customer-host reader integration   |
+| `pnpm e2e --suite all`         | All suites; requires all configured accounts and external prerequisites                    |
+| `pnpm e2e:list --suite all`    | List browser tests without executing them                                                  |
+| `pnpm coverage`                | Implemented scenarios and explicit remaining gaps                                          |
+
+## Offline application workflow suites
+
+Run the selected application-repository workflow tests without starting the app or calling paid providers:
+
+```powershell
+pnpm test:product-offline
+```
+
+The command defaults to the sibling `../paperlyft-html-review` checkout. Override it with `--main-repo <path>` and the ignored result location with `--report <json-path>`. It runs the selected Node Vitest files serially, sets `LLM_LIVE_TESTS=0`, and removes common provider credentials from the child environment. Its structured JSON report records the exact command, exit status, suite boundaries, and bounded output tails. Vitest's normal nonzero result for no matching test files is preserved; the command does not enable `--passWithNoTests`.
+
+These are offline component/integration checks, not browser E2E or proof of real document processing. They use generated data, mocked HTTP/provider/storage dependencies, in-memory repositories, and synthetic quality evidence as described per suite in the report. Passing them demonstrates only those selected code paths; it does not verify a paid provider, real cloud storage, a live application stack, or accessibility/reader output.
+
+For the selected cross-repository no-cost Vitest tests under `tests/product/`, run `pnpm test:product-local`. It uses the sibling application checkout by default; `--main-repo <path>` and `--report <json-path>` override the target and ignored JSON artifact. The runner starts that checkout's installed Vitest directly, does not load `.env` files, disables live LLM tests, removes common provider credentials, and passes the local corpus manifest only if it exists. On Windows it may point at an already installed qpdf executable; it never installs one. These tests still use fake providers and local test dependencies; their result is not paid processing or end-to-end production evidence.
+
+The native pipeline requires the application's existing Python dependencies, qpdf, verified PaperLyft WeasyPrint image, and PDF validator runtime. It generates a small PDF and exercises real preflight, rasterization, page tooling and final output assembly. Only the AI authoring and visual decisions are scripted; this does not establish conversion accuracy. The bulk lifecycle test uses a filesystem-backed library with in-memory job/document stores, controlled source responses, and synthetic final artifacts/quality evidence. It tests two unique PDFs plus a duplicate URL across all four approval/publication combinations. No real customer account or website is changed. Missing corpus files are reported as incomplete; skipped cases cannot produce a complete pass. A stale result is removed before each run.
+
+Generate the ignored corpus manifest with `pnpm corpus generate` before the local product suite. This checks import metadata for each supplied file, then cross-checks three seeded samples through native preflight. Oversized files receive metadata checks without reading their full contents. `pnpm typecheck:product` uses the default sibling checkout; the regular `pnpm check` remains independent of an application checkout. The no-cost runs do not prove signed-in browser journeys, cloud deployment behavior, or compatibility with every CMS. See [the run record](docs/LOCAL-TEST-RESULTS.md).
 
 Run `pnpm doctor --suite <name>` before a live suite. A missing prerequisite is reported as blocked. Missing roles/corpus/public documents can cause explicit skips; **any skipped case makes the run incomplete, not a pass**. Expected product failures also fail the suite rather than being converted into successful processing.
 

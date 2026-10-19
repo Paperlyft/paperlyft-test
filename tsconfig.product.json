@@ -1,0 +1,17 @@
+{
+  "extends": "../paperlyft-html-review/tsconfig.json",
+  "compilerOptions": {
+    "baseUrl": "../paperlyft-html-review",
+    "paths": {
+      "@/*": ["./*"],
+      "vitest": ["node_modules/vitest"]
+    },
+    "incremental": false,
+    "noEmit": true
+  },
+  "include": [
+    "tests/product/**/*.ts",
+    "../paperlyft-html-review/modules/llm-services/src/specificity.d.ts"
+  ],
+  "exclude": ["node_modules", "artifacts"]
+}
