@@ -1,5 +1,13 @@
 # Initial validation
 
+## Provider-pattern review update
+
+Reviewed the user-supplied county provider workbook and the real application discovery source. Added eight synthetic delivery profiles and six real-target website-preparation journeys. The latter have not run: dedicated account sessions and a public HTTPS isolated fixture host are still required. The review found likely acceptance failures for extensionless query downloads and HTML base-URL resolution, plus unsupported JSON/JavaScript discovery.
+
+Offline validation passed: 30 harness unit tests (the full 29-test run followed by the affected six-test discovery validator run including one added guard), TypeScript checks, and three fixture-browser tests in installed Edge. Playwright lists 26 product tests across eight files. The browser checks exercise actual fixture JavaScript pagination, encoded relative links, public redirects and access failures; they do not establish product discovery or processing success. No conversion, monitoring, Gemini call, or paid process ran.
+
+## Original setup validation
+
 Validated on the development machine against the current `new_pipeline` UI contracts in the separate PaperLyft application checkout. This repository contains no application source or copied dependencies from that checkout.
 
 - TypeScript compilation and offline harness self-tests pass.

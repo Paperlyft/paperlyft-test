@@ -5,8 +5,9 @@ import path from 'node:path'
 import { createHash } from 'node:crypto'
 import { gzipSync } from 'node:zlib'
 import { buildFixtures, type FixtureManifest } from './fixtures.js'
+import { resolveProviderRoute } from './provider-sites.js'
 
-export type LabOptions = { host?: string; port?: number }
+export type LabOptions = { host?: string; port?: number; discoveryOnly?: boolean }
 export type LabHandle = { baseURL: string; close(): Promise<void> }
 const page = (title: string, body: string) =>
   `<!doctype html><html><head><title>${title}</title></head><body><h1>${title}</h1>${body}</body></html>`
@@ -23,6 +24,8 @@ export async function startLab(options: LabOptions = {}): Promise<LabHandle> {
     await rm(dir, { recursive: true, force: true })
     throw error
   }
+  const providerSimplePdf = await readFile(path.join(dir, 'simple-1p.pdf'))
+  const providerMultiPdf = await readFile(path.join(dir, 'multi-page-3p.pdf'))
   let version = 1
   let closed = false
   const openTimers = new Set<ReturnType<typeof setTimeout>>()
@@ -30,13 +33,36 @@ export async function startLab(options: LabOptions = {}): Promise<LabHandle> {
     try {
       const url = new URL(req.url ?? '/', 'http://fixture.local')
       const pathname = url.pathname
+      const providerResponse = resolveProviderRoute(
+        pathname,
+        url.searchParams,
+        providerSimplePdf,
+        providerMultiPdf,
+      )
+      if (providerResponse)
+        return send(
+          res,
+          providerResponse.status,
+          providerResponse.body,
+          providerResponse.contentType,
+          providerResponse.headers,
+        )
+      if (pathname === '/lab-capabilities')
+        return send(
+          res,
+          200,
+          JSON.stringify({ providerDiscoveryIsolated: options.discoveryOnly === true }),
+          'application/json',
+        )
       if (pathname === '/')
         return send(
           res,
           200,
           page(
             'PaperLyft Fixture Lab',
-            '<a href="/sitemap.xml">Sitemap</a><a href="/document-center">Document Center</a>',
+            options.discoveryOnly
+              ? '<p>Isolated provider-site discovery fixtures.</p>'
+              : '<a href="/sitemap.xml">Sitemap</a><a href="/document-center">Document Center</a>',
           ),
         )
       if (pathname === '/customer-site')
@@ -52,14 +78,18 @@ export async function startLab(options: LabOptions = {}): Promise<LabHandle> {
         return send(
           res,
           200,
-          `User-agent: *\nAllow: /\nSitemap: ${origin(req)}/sitemap.xml\n`,
+          options.discoveryOnly
+            ? 'User-agent: *\nAllow: /\n'
+            : `User-agent: *\nAllow: /\nSitemap: ${origin(req)}/sitemap.xml\n`,
           'text/plain; charset=utf-8',
         )
       if (pathname === '/sitemap.xml')
         return send(
           res,
           200,
-          `<?xml version="1.0"?><sitemapindex xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"><sitemap><loc>${origin(req)}/nested/sitemap.xml</loc></sitemap></sitemapindex>`,
+          options.discoveryOnly
+            ? '<?xml version="1.0"?><urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"></urlset>'
+            : `<?xml version="1.0"?><sitemapindex xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"><sitemap><loc>${origin(req)}/nested/sitemap.xml</loc></sitemap></sitemapindex>`,
           'application/xml; charset=utf-8',
         )
       if (pathname === '/sitemap-index.xml')

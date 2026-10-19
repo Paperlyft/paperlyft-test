@@ -20,5 +20,6 @@ jobs:
           cache: pnpm
       - run: pnpm install --frozen-lockfile --ignore-scripts
       - run: pnpm check
+      - run: pnpm test:lab
       - run: pnpm e2e:list --suite all
       - run: pnpm coverage

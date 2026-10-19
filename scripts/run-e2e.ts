@@ -15,6 +15,7 @@ const files: Record<Suite, string[]> = {
   journeys: ['journeys.spec.ts'],
   corpus: ['corpus.spec.ts'],
   imports: ['bulk-import.spec.ts'],
+  discovery: ['website-discovery.spec.ts'],
   roles: ['auth-roles.spec.ts'],
   experience: ['experience.spec.ts'],
   integration: ['website-integration.spec.ts'],

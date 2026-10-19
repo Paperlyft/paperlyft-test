@@ -153,6 +153,96 @@ const cases: Array<[string, string, string, string]> = [
 
 const planned: Array<[string, string, string, string]> = [
   [
+    'imports.discovery.drupal-files',
+    'intake',
+    'P1',
+    'Website discovery follows Drupal-style HTML file pages to eligible public PDFs.',
+  ],
+  [
+    'imports.discovery.granicus-govaccess',
+    'intake',
+    'P1',
+    'Website discovery follows a GovAccess-style HTML document link with query parameters.',
+  ],
+  [
+    'imports.discovery.opencities',
+    'intake',
+    'P1',
+    'Website discovery resolves an OpenCities-style percent-encoded PDF path.',
+  ],
+  [
+    'imports.discovery.revize',
+    'intake',
+    'P1',
+    'Website discovery resolves links against a Revize-style HTML base URL.',
+  ],
+  [
+    'imports.discovery.sharepoint-library',
+    'intake',
+    'P2',
+    'Website discovery follows a public SharePoint-style redirect and excludes authenticated-only items.',
+  ],
+  [
+    'imports.discovery.joomla-download',
+    'intake',
+    'P2',
+    'Website discovery identifies a Joomla-style query download that returns a public PDF.',
+  ],
+  [
+    'imports.discovery.wordpress-multisite',
+    'intake',
+    'P1',
+    'Website discovery enumerates PDFs from WordPress multisite REST media pagination.',
+  ],
+  [
+    'imports.discovery.custom-static-migration',
+    'intake',
+    'P2',
+    'Website discovery handles legacy-to-current redirects while reporting script-only records as unsupported.',
+  ],
+  [
+    'imports.discovery.wix-static-links',
+    'intake',
+    'P2',
+    'Website discovery extracts public PDFs from a conventional Wix-style HTML page.',
+  ],
+  [
+    'imports.discovery.govstack-static-links',
+    'intake',
+    'P2',
+    'Website discovery extracts public PDFs from a conventional Govstack-style HTML page.',
+  ],
+  [
+    'imports.discovery.respect-robots',
+    'intake',
+    'P0',
+    'Website discovery observes robots.txt crawl restrictions and does not fetch disallowed pages.',
+  ],
+  [
+    'intake.decentralized-domains',
+    'intake',
+    'P1',
+    'Configured county and department roots define crawl scope; external HTML is not silently treated as fully inventoried, while allowed public CDN PDF links remain importable.',
+  ],
+  [
+    'intake.expiring-download-links',
+    'intake',
+    'P1',
+    'An expired signed download produces an actionable source error; changed signatures do not silently cause repeated conversion or leak credentials into reports.',
+  ],
+  [
+    'intake.api-pagination-cycle',
+    'intake',
+    'P1',
+    'Repeated API cursors, duplicate records and empty final pages terminate discovery within bounds and report any incomplete inventory.',
+  ],
+  [
+    'imports.discovery.report-completeness',
+    'intake',
+    'P0',
+    'Saved report identifies crawl limits, incomplete traversal, and source fetch failures.',
+  ],
+  [
     'language.arabic-rtl',
     'language',
     'P1',
@@ -679,6 +769,12 @@ const implemented = new Map<string, string>([
   ['website.script-copy-exact', 'tests/e2e/website-integration.spec.ts'],
   ['website.script-loads-on-customer-host', 'tests/e2e/website-integration.spec.ts'],
   ['website.script-role-visibility', 'tests/e2e/website-integration.spec.ts'],
+  ['imports.discovery.drupal-files', 'tests/e2e/website-discovery.spec.ts'],
+  ['imports.discovery.granicus-govaccess', 'tests/e2e/website-discovery.spec.ts'],
+  ['imports.discovery.opencities', 'tests/e2e/website-discovery.spec.ts'],
+  ['imports.discovery.revize', 'tests/e2e/website-discovery.spec.ts'],
+  ['imports.discovery.sharepoint-library', 'tests/e2e/website-discovery.spec.ts'],
+  ['imports.discovery.joomla-download', 'tests/e2e/website-discovery.spec.ts'],
 ])
 const productionCanaries = new Set([
   'canary.public-home',
@@ -755,6 +851,14 @@ function prerequisitesFor(id: string, category: string): string[] {
       'dedicated adminA session',
       'explicit paid-processing authorization',
       'source-page and cost budget',
+    ]
+  if (id.startsWith('imports.discovery.'))
+    return [
+      'dedicated adminA session with configured subject and tenant',
+      'public HTTPS host serving the named synthetic provider profile',
+      'fixture lab started with PAPERLYFT_LAB_DISCOVERY_ONLY=1 and /lab-capabilities confirms providerDiscoveryIsolated=true',
+      'local or staging target and explicit mutation flag to save a preparation report',
+      'no conversion admission or paid provider processing',
     ]
   if (category === 'language')
     return [

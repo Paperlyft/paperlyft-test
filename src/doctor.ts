@@ -6,6 +6,7 @@ export const suites = [
   'journeys',
   'corpus',
   'imports',
+  'discovery',
   'roles',
   'experience',
   'integration',
@@ -13,6 +14,13 @@ export const suites = [
 ] as const
 export type Suite = (typeof suites)[number]
 export type Check = { name: string; ok: boolean; detail: string }
+export function suiteRequirements(suite: Suite) {
+  return {
+    mutations: ['journeys', 'corpus', 'imports', 'discovery', 'all'].includes(suite),
+    processing: ['journeys', 'corpus', 'imports', 'all'].includes(suite),
+    publicFixtures: ['imports', 'discovery', 'integration', 'all'].includes(suite),
+  }
+}
 export function requiredAccounts(suite: Suite): AccountKey[] {
   if (suite === 'smoke') return []
   if (suite === 'roles' || suite === 'all')
@@ -25,7 +33,7 @@ export async function doctor(
   canary = false,
 ): Promise<Check[]> {
   const checks: Check[] = []
-  const mutations = ['journeys', 'corpus', 'imports', 'all'].includes(suite)
+  const { mutations, processing, publicFixtures } = suiteRequirements(suite)
   try {
     assertRunAllowed(config, { canary, mutations })
     checks.push({
@@ -37,7 +45,7 @@ export async function doctor(
     checks.push({ name: 'environment', ok: false, detail: (error as Error).message })
     return checks
   }
-  if (['journeys', 'corpus', 'imports', 'all'].includes(suite))
+  if (processing)
     checks.push({
       name: 'processing-permission',
       ok: config.allowPaidProcessing,
@@ -127,7 +135,7 @@ export async function doctor(
       await client.dispose()
     }
   }
-  if (suite === 'imports' || suite === 'all' || suite === 'integration') {
+  if (publicFixtures) {
     checks.push({
       name: 'public-fixtures',
       ok: Boolean(config.publicFixtureBaseURL),

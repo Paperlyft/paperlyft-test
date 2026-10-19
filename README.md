@@ -42,19 +42,21 @@ The complete `roles` and `all` suites also require `pnpm auth --role platform`; 
 
 ## Suites
 
-| Command                        | Exercises                                                                                |
-| ------------------------------ | ---------------------------------------------------------------------------------------- |
-| `pnpm check`                   | Harness self-tests and typecheck; no product processing                                  |
-| `pnpm e2e --suite smoke`       | Anonymous real homepage and protected API rejection                                      |
-| `pnpm e2e --suite experience`  | Signed-in desktop/phone accessibility, keyboard and import-dialog defaults               |
-| `pnpm e2e --suite journeys`    | Actual upload, processing, approval, and the four approval/publication combinations      |
-| `pnpm e2e --suite corpus`      | Seeded random real PDFs from the supplied corpus, with repeat selections allowed         |
-| `pnpm e2e --suite imports`     | Real public URL import preparation, idempotency, reviewed admission and processing       |
-| `pnpm e2e --suite roles`       | Dedicated session roles and cross-tenant document denial                                 |
-| `pnpm e2e --suite integration` | Script copy, role visibility, private-reader denial and customer-host reader integration |
-| `pnpm e2e --suite all`         | All suites; requires all configured accounts and external prerequisites                  |
-| `pnpm e2e:list --suite all`    | List browser tests without executing them                                                |
-| `pnpm coverage`                | Implemented scenarios and explicit remaining gaps                                        |
+| Command                        | Exercises                                                                                 |
+| ------------------------------ | ----------------------------------------------------------------------------------------- |
+| `pnpm check`                   | Harness self-tests and typecheck; no product processing                                   |
+| `pnpm test:lab`                | Local synthetic source-site browser checks; no PaperLyft target or account                |
+| `pnpm e2e --suite smoke`       | Anonymous real homepage and protected API rejection                                       |
+| `pnpm e2e --suite experience`  | Signed-in desktop/phone accessibility, keyboard and import-dialog defaults                |
+| `pnpm e2e --suite journeys`    | Actual upload, processing, approval, and the four approval/publication combinations       |
+| `pnpm e2e --suite corpus`      | Seeded random real PDFs from the supplied corpus, with repeat selections allowed          |
+| `pnpm e2e --suite imports`     | Real public URL import preparation, idempotency, reviewed admission and processing        |
+| `pnpm e2e --suite discovery`   | Real website-import preparation against public synthetic provider profiles; no conversion |
+| `pnpm e2e --suite roles`       | Dedicated session roles and cross-tenant document denial                                  |
+| `pnpm e2e --suite integration` | Script copy, role visibility, private-reader denial and customer-host reader integration  |
+| `pnpm e2e --suite all`         | All suites; requires all configured accounts and external prerequisites                   |
+| `pnpm e2e:list --suite all`    | List browser tests without executing them                                                 |
+| `pnpm coverage`                | Implemented scenarios and explicit remaining gaps                                         |
 
 Run `pnpm doctor --suite <name>` before a live suite. A missing prerequisite is reported as blocked. Missing roles/corpus/public documents can cause explicit skips; **any skipped case makes the run incomplete, not a pass**. Expected product failures also fail the suite rather than being converted into successful processing.
 
@@ -73,6 +75,8 @@ pnpm lab
 The lab runs on `http://127.0.0.1:4179`; stop it with Ctrl+C. Routes and capabilities are in [src/lab/README.md](src/lab/README.md). This is a synthetic source website, not a simulated PaperLyft application.
 
 PaperLyft correctly rejects private/loopback source URLs. For actual URL imports, host this lab at a customer-controlled public HTTPS origin and set `PAPERLYFT_PUBLIC_FIXTURE_BASE_URL`. Hosting/tunnel infrastructure is not provisioned automatically. Do not disable SSRF protection. Website-script integration also needs a published document associated with that fixture source; otherwise it reports a missing prerequisite.
+
+Provider-site priorities and known crawler limits are in [docs/PROVIDER-COVERAGE.md](docs/PROVIDER-COVERAGE.md). The discovery suite saves import reports, so it requires a dedicated `adminA` account, a public HTTPS fixture host, a local or staging environment, and `PAPERLYFT_ALLOW_MUTATIONS=1`. Start the hosted fixture lab with `PAPERLYFT_LAB_DISCOVERY_ONLY=1`; the suite checks `/lab-capabilities` for `providerDiscoveryIsolated: true` before preparing an import. This isolates provider URLs from the general lab sitemap. For example, set the flag before starting `pnpm lab`, then configure `PAPERLYFT_PUBLIC_FIXTURE_BASE_URL` to that public HTTPS origin and run `pnpm doctor --suite discovery` followed by `pnpm e2e --suite discovery`. The suite stops before conversion admission and does not need the paid-processing flag. It has six implemented but unrun profile journeys; several currently expose known crawler gaps. Synthetic profiles are not vendor certifications. Production is not supported.
 
 ## Local → staging → production
 

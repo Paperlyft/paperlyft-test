@@ -4,6 +4,10 @@
 
 Routes:
 
+Eight additional synthetic provider delivery profiles are defined in [provider-sites.ts](provider-sites.ts): media REST pagination, Drupal files, extensionless document IDs, encoded folders, HTML base URLs, public library redirects, query downloads, and JavaScript load-more pagination. `pnpm test:lab` checks the browser-driven fixtures locally without loading product accounts. These are source-site fixtures, not vendor compatibility or PaperLyft processing evidence.
+
+For the real preparation-only `discovery` suite, start the hosted lab with `PAPERLYFT_LAB_DISCOVERY_ONLY=1`. This makes `/sitemap.xml` empty and removes general sitemap links from `/robots.txt`, so the crawler cannot mix unrelated fixture PDFs into a profile's report. `/lab-capabilities` exposes `providerDiscoveryIsolated` for the suite preflight. Other routes remain available. The default lab mode preserves the general sitemap scenarios below.
+
 | Route                                                            | Behavior                                                                                                                     |
 | ---------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------- |
 | `/`                                                              | Links to the sitemap and document center                                                                                     |

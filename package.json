@@ -9,6 +9,7 @@
   },
   "scripts": {
     "test": "node --env-file-if-exists=.env.local --import tsx scripts/test-unit.ts",
+    "test:lab": "node --env-file-if-exists=.env.local node_modules/@playwright/test/cli.js test --config playwright.lab.config.ts",
     "typecheck": "tsc --noEmit",
     "check": "node --import tsx scripts/check.ts",
     "fixtures": "node --env-file-if-exists=.env.local --import tsx scripts/build-fixtures.ts",

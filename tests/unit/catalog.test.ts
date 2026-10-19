@@ -4,6 +4,7 @@ import { existsSync, readFileSync } from 'node:fs'
 import { resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { scenarioCatalog } from '../../scenarios/catalog.js'
+import { providerSites } from '../../src/lab/provider-sites.js'
 
 const repository = resolve(fileURLToPath(new URL('../..', import.meta.url)))
 
@@ -25,7 +26,16 @@ test('catalog has unique stable IDs and complete scenario records', () => {
         item.id.startsWith('auth.session.') &&
         source.includes('auth.session.${key}') &&
         source.includes(`'${item.id.slice('auth.session.'.length)}'`)
-      assert.ok(directId || generatedRoleId, `${item.id} must appear in its mapped browser test`)
+      const generatedDiscoveryId =
+        item.testFile === 'tests/e2e/website-discovery.spec.ts' &&
+        source.includes('imports.discovery.${profile.id}') &&
+        providerSites.some(
+          (profile) => profile.method === 'html' && item.id === `imports.discovery.${profile.id}`,
+        )
+      assert.ok(
+        directId || generatedRoleId || generatedDiscoveryId,
+        `${item.id} must appear in its mapped browser test`,
+      )
     } else assert.equal(item.testFile, undefined)
   }
 })
